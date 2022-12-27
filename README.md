@@ -1,0 +1,1 @@
+My code is in StaffordBot.py. I also created an opening book and attached a tablebase but to reduce the size of the repo, these are not included. Also the token in the config is hidden so it is impossible to access my bot account.
