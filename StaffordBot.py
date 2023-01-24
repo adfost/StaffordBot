@@ -3,17 +3,116 @@ from chess import polyglot, syzygy, engine
 from random import choice
 from strategies import MinimalEngine
 
+wpawn = [0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 10, 10, 10, 10, 10, 10, 10, 10, 12,
+         12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 18, 18, 18, 18, 18, 18, 18, 18, 0, 0, 0, 0, 0, 0,
+         0,
+         0]
 
-def value(position):
+bpawn = [0, 0, 0, 0, 0, 0, 0, 0, 18, 18, 18, 18, 18, 18, 18, 18, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12,
+         12, 12, 12, 12, 10, 10, 10, 10, 10, 10, 10, 10, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0,
+         0, 0, 0]
+
+wknight = [25, 28, 28, 28, 28, 28, 28, 25, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30,
+           30, 30, 30, 30, 28, 28, 30, 32, 32, 32, 32, 30, 28, 28, 30, 38, 38, 38, 38, 30, 28, 28, 30, 30, 30, 30, 30,
+           30, 28, 25, 28, 28, 28, 28, 28, 28, 25]
+
+bknight = [25, 28, 28, 28, 28, 28, 28, 25, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 38, 38, 38, 38, 30, 28, 28, 30,
+           32, 32, 32, 32, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30,
+           30, 30,
+           28, 25, 28, 28, 28, 28, 28, 28, 25]
+
+wbishop = [33, 33, 30, 33, 33, 30, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
+           33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
+           33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
+
+bbishop = [33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
+           33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
+           33, 33,
+           33, 33, 33, 30, 33, 33, 30, 33, 33]
+
+wrook = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 53, 53, 53, 53, 53, 53, 53, 53,
+         50, 50, 50, 50, 50, 50, 50, 50]
+
+brook = [50, 50, 50, 50, 50, 50, 50, 50, 53, 53, 53, 53, 53, 53, 53, 53, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
+         50,
+         50, 48, 50, 50, 50, 50, 48, 50]
+
+wqueen = [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
+          90,
+          90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
+          90,
+          90, 90, 90, 90, 90, 90, 90, 90]
+
+bqueen = [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
+          90,
+          90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
+          90,
+          90, 90, 90, 90, 90, 90, 90, 90]
+
+wking = [2, 3, 3, 0, 1, 2, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+bking = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 0, 1, 2, 5, 4]
+
+egking = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 1, 2, 3, 3, 2, 1, 0, 0, 1, 2, 3, 3,
+          2, 1, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+def value(b):
+    score = 0
+    if b.is_check() and b.turn == WHITE:
+        score += 2
+    if b.is_check() and b.turn == BLACK:
+        score -= 2
+    if b.is_checkmate() and b.turn == WHITE:
+        score -= 9999999999
+    if b.is_checkmate() and b.turn == BLACK:
+        score += 9999999999
+    for j in b.pieces(PAWN, WHITE):
+        score += wpawn[j]
+    for j in b.pieces(PAWN, BLACK):
+        score -= bpawn[j]
+    for j in b.pieces(KNIGHT, WHITE):
+        score += wknight[j]
+    for j in b.pieces(KNIGHT, BLACK):
+        score -= bknight[j]
+    for j in b.pieces(BISHOP, WHITE):
+        score += wbishop[j]
+    for j in b.pieces(BISHOP, BLACK):
+        score -= bbishop[j]
+    for j in b.pieces(ROOK, WHITE):
+        score += wrook[j]
+    for j in b.pieces(ROOK, BLACK):
+        score -= brook[j]
+    for j in b.pieces(QUEEN, WHITE):
+        score += wqueen[j]
+    for j in b.pieces(QUEEN, BLACK):
+        score -= bqueen[j]
+    if b.queens == 0:
+        for j in b.pieces(KING, WHITE):
+            score += egking[j]
+        for j in b.pieces(KING, BLACK):
+            score -= egking[j]
+    else:
+        for j in b.pieces(KING, WHITE):
+            score += wking[j]
+        for j in b.pieces(KING, BLACK):
+            score -= bking[j]
+    return score
+
+'''def value(position):
     pawn = [
-    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0,0,0,0,0,0,0,0],
     [18,18,18,18,18,18,18,18],
-    [15,15,20,20,20,20,15,15],
+    [13,13,13,13,13,13,13,13],
     [12,12,12,12,12,12,12,12],
-    [10,10,10,10,10,10,10,10],
-    [8, 8, 8, 8, 8, 8, 8, 8],
-    [8, 8, 8, 8, 8, 8, 8, 8],
-    [0, 0, 0, 0, 0, 0, 0, 0]]
+    [11,9,11,11,11,11,9,11],
+    [9,9,9,9,9,9,9,9],
+    [8,8,8,8,8,8,8,8],
+    [0,0,0,0,0,0,0,0]]
 
     knight = [[25,28,28,28,28,28,28,25],
     [28,30,30,30,30,30,30,28],
@@ -40,7 +139,7 @@ def value(position):
     [50,50,50,50,50,50,50,50],
     [50,50,50,50,50,50,50,50],
     [50,50,50,50,50,50,50,50],
-    [50,50,50,52,52,50,50,50]]
+    [50,50,51,52,52,51,50,50]]
 
     queen = [[90,90,90,90,90,90,90,90],
     [90,90,90,90,90,90,90,90],
@@ -113,7 +212,7 @@ def value(position):
                     score += king[7-i][j]
                 elif piece == 'k':
                     score -= king[i][j]
-    return score
+    return score'''
 
 MAXDEPTH = 5
 
@@ -127,7 +226,7 @@ class StaffordBot(MinimalEngine):
 
     def search(self, board, *args):
         savedposition = {}
-        def bestWithDepth(n, alpha, beta, start, nullmove):
+        def bestWithDepth(n, alpha, beta, start, nullmove, total):
             nonlocal board
             nonlocal savedposition
             def checksAndCapturesFirst(move_list):
@@ -143,85 +242,85 @@ class StaffordBot(MinimalEngine):
             moves = list(board.legal_moves)
             if n == 0 or board.is_checkmate() or board.is_stalemate():
                 return value(board), None
-            elif self.store and str(board) in self.saved:
-                return self.saved[str(board)]
-            #elif str(board) in savedposition:
-                #return savedposition[str(board)]
+            elif board.can_claim_draw():
+                return 0, None
+            elif self.store and board.fen() in self.saved:
+                return self.saved[board.fen()]
             else:
                 if board.turn == WHITE:
+                    if board.is_checkmate():
+                        return -999999, None
                     best = -9999999
                     bestMove = None
                     if len(moves) > 0:
                         bestMove = moves[0]
-                    if len(moves) < 4:
+                    if len(moves) < 4 and total < 8:
                         n += 1
-                    for m in checksAndCapturesFirst(moves):
-                        board.push(m)
-                        if board.is_checkmate():
-                            board.pop()
-                            return 999999, m
-                        board.pop()
-                    if len(moves) > 8 and not nullmove and n > 3:
+                        total += 1
+                    '''if len(moves) > 8 and not nullmove and n > 2:
                         board.push(Move.null())
-                        nullEval, _ = bestWithDepth(n - 3, alpha, beta, False, True)
+                        nullEval, _ = bestWithDepth(n - 2, alpha, beta, False, True)
                         if nullEval > best:
-                            best = nullEval
+                            best = nullEval -10
                         board.pop()
-                        alpha = max(alpha, best)
+                        alpha = max(alpha, best)'''
                     for m in checksAndCapturesFirst(moves):
-                        if start:
-                            print(m)
                         board.push(m)
                         if n == MAXDEPTH and board.can_claim_draw():
                             nextEval = 0
+                        elif board.fen() in savedposition:
+                            nextEval, refutation = savedposition[board.fen()]
                         else:
-                            nextEval, refutation = bestWithDepth(n - 1, alpha, beta, False, False)
+                            nextEval, refutation = bestWithDepth(n - 1, alpha, beta, False, False, total)
                         if nextEval > best:
                             best = nextEval
                             bestMove = m
+                        if start:
+                            print(m, nextEval)
+                            print(bestMove, best)
                         board.pop()
                         if best < -99999 and n == MAXDEPTH - 1:
                             self.store = True
-                        savedposition[str(board)] = best, bestMove
+                        savedposition[board.fen()] = best, bestMove
                         if best >= beta:
                             break
                         alpha = max(alpha, best)
                     return best, bestMove
                 else:
+                    if board.is_checkmate():
+                        return 999999, None
                     best = 9999999
                     bestMove = None
                     if len(moves) > 0:
                         bestMove = moves[0]
-                    if len(moves) < 4:
+                    if len(moves) < 4 and total < 8:
                         n += 1
-                    for m in checksAndCapturesFirst(moves):
-                        board.push(m)
-                        if board.is_checkmate():
-                            board.pop()
-                            return -999999, m
-                        board.pop()
-                    if len(moves) > 8 and not nullmove and n > 3:
+                        total += 1
+                    '''if len(moves) > 8 and not nullmove and n > 2:
                         board.push(Move.null())
-                        nullEval, _ = bestWithDepth(n - 3, alpha, beta, False, True)
+                        nullEval, _ = bestWithDepth(n - 2, alpha, beta, False, True)
                         if nullEval < best:
-                            best = nullEval
+                            best = nullEval + 10
                         board.pop()
-                        beta = min(beta, best)
+                        beta = min(beta, best)'''
                     for m in checksAndCapturesFirst(moves):
-                        if start:
-                            print(m)
                         board.push(m)
                         if n == MAXDEPTH and board.can_claim_draw():
                             nextEval = 0
+                        elif board.fen() in savedposition:
+                            nextEval, refutation = savedposition[board.fen()]
                         else:
-                            nextEval, refutation = bestWithDepth(n - 1, alpha, beta, False, False)
+                            nextEval, refutation = bestWithDepth(n - 1, alpha, beta, False, False, total)
                         if nextEval < best:
                             best = nextEval
                             bestMove = m
+                        if start:
+                            print(m, nextEval)
+                            print(bestMove, best)
                         board.pop()
                         if best > 99999 and n == MAXDEPTH - 1:
                             self.store = True
-                        savedposition[str(board)] = best, bestMove
+                        savedposition[board.fen()] = best, bestMove
                         if best <= alpha:
                             break
                         beta = min(beta, best)
@@ -247,11 +346,13 @@ class StaffordBot(MinimalEngine):
         best_move = None
         least_bad = 0
         least_bad_move = None
-        if dtz is not None:
+        if dtz is not None and board.pawns == 0:
             moves = list(board.legal_moves)
             for m in moves:
                 board.push(m)
                 newdtz = self.tablebase.get_dtz(board)
+                print(m, newdtz)
+                print(best, best_move)
                 if newdtz is None:
                     board.pop()
                     continue
@@ -260,7 +361,7 @@ class StaffordBot(MinimalEngine):
                     if result == 1:
                         return engine.PlayResult(m, None)
                     elif result == 0:
-                        least_bad = 99999999999
+                        least_bad = 0
                         least_bad_move = m
                 if 0 > newdtz > best:
                     best = newdtz
@@ -276,7 +377,12 @@ class StaffordBot(MinimalEngine):
         result = None
         try:
             print("Called")
-            result = bestWithDepth(MAXDEPTH, -15000, 15000, True, False)[1]
+            depth = MAXDEPTH
+            if len(list(board.legal_moves)) < 18:
+                depth += 1
+            if len(list(board.legal_moves)) < 10:
+                depth += 2
+            result = bestWithDepth(MAXDEPTH, -15000, 15000, True, False, depth)[1]
         except Exception as e:
             print(e)
         if self.store:
