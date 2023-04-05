@@ -1,220 +1,42 @@
+import torch
+import torch.nn as nn
 from chess import *
 from chess import polyglot, syzygy, engine
 from random import choice
 from strategies import MinimalEngine
+from utils.getannotated import *
 
-wpawn = [0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 10, 10, 10, 10, 10, 10, 10, 10, 12,
-         12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 18, 18, 18, 18, 18, 18, 18, 18, 0, 0, 0, 0, 0, 0,
-         0,
-         0]
 
-bpawn = [0, 0, 0, 0, 0, 0, 0, 0, 18, 18, 18, 18, 18, 18, 18, 18, 13, 13, 13, 13, 13, 13, 13, 13, 12, 12, 12, 12,
-         12, 12, 12, 12, 10, 10, 10, 10, 10, 10, 10, 10, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0,
-         0, 0, 0]
+class Net(nn.Module):
+    def __init__(self):
+        # Define all the parameters of the net
+        super(Net, self).__init__()
+        self.fc1 = nn.Linear(64 * 12 + 6, 200, dtype=float)
+        self.fc2 = nn.Linear(200, 200, dtype=float)
+        self.fc3 = nn.Linear(200, 200, dtype=float)
+        self.fc4 = nn.Linear(200, 200, dtype=float)
+        self.fc5 = nn.Linear(200, 1, dtype=float)
 
-wknight = [25, 28, 28, 28, 28, 28, 28, 25, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30,
-           30, 30, 30, 30, 28, 28, 30, 32, 32, 32, 32, 30, 28, 28, 30, 38, 38, 38, 38, 30, 28, 28, 30, 30, 30, 30, 30,
-           30, 28, 25, 28, 28, 28, 28, 28, 28, 25]
+    def forward(self, x):
+        # Do the forward pass
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
+        return x
 
-bknight = [25, 28, 28, 28, 28, 28, 28, 25, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 38, 38, 38, 38, 30, 28, 28, 30,
-           32, 32, 32, 32, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30, 30, 30, 28, 28, 30, 30, 30, 30,
-           30, 30,
-           28, 25, 28, 28, 28, 28, 28, 28, 25]
 
-wbishop = [33, 33, 30, 33, 33, 30, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
-           33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
-           33, 33, 33, 33, 33, 33, 33, 33, 33, 33]
-
-bbishop = [33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
-           33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
-           33, 33,
-           33, 33, 33, 30, 33, 33, 30, 33, 33]
-
-wrook = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
-         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 53, 53, 53, 53, 53, 53, 53, 53,
-         50, 50, 50, 50, 50, 50, 50, 50]
-
-brook = [50, 50, 50, 50, 50, 50, 50, 50, 53, 53, 53, 53, 53, 53, 53, 53, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
-         50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50,
-         50,
-         50, 48, 50, 50, 50, 50, 48, 50]
-
-wqueen = [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
-          90,
-          90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
-          90,
-          90, 90, 90, 90, 90, 90, 90, 90]
-
-bqueen = [90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
-          90,
-          90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90,
-          90,
-          90, 90, 90, 90, 90, 90, 90, 90]
-
-wking = [2, 3, 3, 0, 1, 2, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-bking = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 3, 0, 1, 2, 5, 4]
-
-egking = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 1, 2, 3, 3, 2, 1, 0, 0, 1, 2, 3, 3,
-          2, 1, 0, 0, 1, 2, 2, 2, 2, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+model = Net()
+model.load_state_dict(torch.load("model.pt"))
 
 
 def value(b):
-    score = 0
-    if b.is_check() and b.turn == WHITE:
-        score += 2
-    if b.is_check() and b.turn == BLACK:
-        score -= 2
-    if b.is_checkmate() and b.turn == WHITE:
-        score -= 9999999999
-    if b.is_checkmate() and b.turn == BLACK:
-        score += 9999999999
-    for j in b.pieces(PAWN, WHITE):
-        score += wpawn[j]
-    for j in b.pieces(PAWN, BLACK):
-        score -= bpawn[j]
-    for j in b.pieces(KNIGHT, WHITE):
-        score += wknight[j]
-    for j in b.pieces(KNIGHT, BLACK):
-        score -= bknight[j]
-    for j in b.pieces(BISHOP, WHITE):
-        score += wbishop[j]
-    for j in b.pieces(BISHOP, BLACK):
-        score -= bbishop[j]
-    for j in b.pieces(ROOK, WHITE):
-        score += wrook[j]
-    for j in b.pieces(ROOK, BLACK):
-        score -= brook[j]
-    for j in b.pieces(QUEEN, WHITE):
-        score += wqueen[j]
-    for j in b.pieces(QUEEN, BLACK):
-        score -= bqueen[j]
-    if b.queens == 0:
-        for j in b.pieces(KING, WHITE):
-            score += egking[j]
-        for j in b.pieces(KING, BLACK):
-            score -= egking[j]
-    else:
-        for j in b.pieces(KING, WHITE):
-            score += wking[j]
-        for j in b.pieces(KING, BLACK):
-            score -= bking[j]
-    return score
-
-'''def value(position):
-    pawn = [
-    [0,0,0,0,0,0,0,0],
-    [18,18,18,18,18,18,18,18],
-    [13,13,13,13,13,13,13,13],
-    [12,12,12,12,12,12,12,12],
-    [11,9,11,11,11,11,9,11],
-    [9,9,9,9,9,9,9,9],
-    [8,8,8,8,8,8,8,8],
-    [0,0,0,0,0,0,0,0]]
-
-    knight = [[25,28,28,28,28,28,28,25],
-    [28,30,30,30,30,30,30,28],
-    [28,30,38,38,38,38,30,28],
-    [28,30,32,32,32,32,30,28],
-    [28,30,30,30,30,30,30,28],
-    [28,30,31,30,30,31,30,28],
-    [28,30,30,30,30,30,30,28],
-    [25,28,28,28,28,28,28,25]]
-
-    bishop = [[33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,33,33,33,33,33,33],
-    [33,33,30,33,33,30,33,33]]
-
-    rook = [[50,50,50,50,50,50,50,50],
-    [53,53,53,53,53,53,53,53],
-    [50,50,50,50,50,50,50,50],
-    [50,50,50,50,50,50,50,50],
-    [50,50,50,50,50,50,50,50],
-    [50,50,50,50,50,50,50,50],
-    [50,50,50,50,50,50,50,50],
-    [50,50,51,52,52,51,50,50]]
-
-    queen = [[90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90],
-    [90,90,90,90,90,90,90,90]]
-
-    king = [[0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,5,0,0,0,5,0]]
-
-    kingendgame = [[0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 1, 2, 2, 2, 2, 1, 0],
-    [0, 1, 2, 3, 3, 2, 1, 0],
-    [0, 1, 2, 3, 3, 2, 1, 0],
-    [0, 1, 2, 2, 2, 2, 1, 0],
-    [0, 1, 1, 1, 1, 1, 1, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]]
-
-    score = 0
-    if position.is_check() and position.turn == WHITE:
-        score += 8
-    if position.is_check() and position.turn == BLACK:
-        score -= 8
-    if position.is_checkmate() and position.turn == WHITE:
-        score += 9999999999
-    if position.is_checkmate() and position.turn == BLACK:
-        score -= 9999999999
-    for i in range(0, 8):
-        for j in range(0, 8):
-            piece = position.piece_at(8*i+j)
-            if piece != None:
-                piece = piece.symbol()
-            if piece == 'R':
-                score += rook[7-i][j]
-            elif piece == 'r':
-                score -= rook[i][j]
-            elif piece == 'B':
-                score += bishop[7-i][j]
-            elif piece == 'b':
-                score -= bishop[i][j]
-            elif piece == 'N':
-                score += knight[7-i][j]
-            elif piece == 'n':
-                score -= knight[i][j]
-            elif piece == 'P':
-                score += pawn[7-i][j]
-            elif piece == 'p':
-                score -= pawn[i][j]
-            elif piece == 'Q':
-                score += queen[7-i][j]
-            elif piece == 'q':
-                score -= queen[i][j]
-            if position.queens == 0:
-                if piece == 'K':
-                    score += kingendgame[7-i][j]
-                elif piece == 'k':
-                    score -= kingendgame[i][j]
-            else:
-                if piece == 'K':
-                    score += king[7-i][j]
-                elif piece == 'k':
-                    score -= king[i][j]
-    return score'''
+    b2 = convertBoard(b)
+    return model(torch.tensor(b2, dtype=float))
 
 MAXDEPTH = 5
+
 
 class StaffordBot(MinimalEngine):
     def __init__(self, commands, options, stderr, draw_or_resign, name="StaffordBot", **popen_args):
@@ -226,9 +48,11 @@ class StaffordBot(MinimalEngine):
 
     def search(self, board, *args):
         savedposition = {}
+
         def bestWithDepth(n, alpha, beta, start, nullmove, total):
             nonlocal board
             nonlocal savedposition
+
             def checksAndCapturesFirst(move_list):
                 next_non_forcing = 0
                 for i in range(len(move_list)):
@@ -388,6 +212,7 @@ class StaffordBot(MinimalEngine):
         if self.store:
             self.saved = savedposition
         return engine.PlayResult(result, None)
+
 
 # Test Code
 '''b = Board("4k3/8/8/8/8/8/8/4K2R w - - 0 1")
